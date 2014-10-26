@@ -60,6 +60,9 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
         /// Pen used for drawing bones that are currently tracked
         /// </summary>
         private readonly Pen trackedBonePen = new Pen(Brushes.Green, 6);
+        private readonly Pen trackedBoneRed = new Pen(Brushes.Red, 6);
+        private readonly Pen trackedBoneYellow = new Pen(Brushes.Yellow, 6);
+        private readonly Pen trackedBonePenTurquoise = new Pen(Brushes.Turquoise, 6);
 
         /// <summary>
         /// Pen used for drawing bones that are currently inferred
@@ -254,33 +257,69 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
         private void DrawBonesAndJoints(Skeleton skeleton, DrawingContext drawingContext)
         {
             // Render Torso
-            this.DrawBone(skeleton, drawingContext, JointType.Head, JointType.ShoulderCenter);
-            this.DrawBone(skeleton, drawingContext, JointType.ShoulderCenter, JointType.ShoulderLeft);
-            this.DrawBone(skeleton, drawingContext, JointType.ShoulderCenter, JointType.ShoulderRight);
-            this.DrawBone(skeleton, drawingContext, JointType.ShoulderCenter, JointType.Spine);
-            this.DrawBone(skeleton, drawingContext, JointType.Spine, JointType.HipCenter);
-            this.DrawBone(skeleton, drawingContext, JointType.HipCenter, JointType.HipLeft);
-            this.DrawBone(skeleton, drawingContext, JointType.HipCenter, JointType.HipRight);
+            this.DrawBone(skeleton, drawingContext, JointType.Head, JointType.ShoulderCenter, trackedBonePen);
+            this.DrawBone(skeleton, drawingContext, JointType.ShoulderCenter, JointType.ShoulderLeft, trackedBonePen);
+            this.DrawBone(skeleton, drawingContext, JointType.ShoulderCenter, JointType.ShoulderRight, trackedBonePen);
+            this.DrawBone(skeleton, drawingContext, JointType.ShoulderCenter, JointType.Spine, trackedBonePen);
+            this.DrawBone(skeleton, drawingContext, JointType.Spine, JointType.HipCenter, trackedBonePen);
+            this.DrawBone(skeleton, drawingContext, JointType.HipCenter, JointType.HipLeft, trackedBonePen);
+            this.DrawBone(skeleton, drawingContext, JointType.HipCenter, JointType.HipRight, trackedBonePen);
 
             // Left Arm
-            this.DrawBone(skeleton, drawingContext, JointType.ShoulderLeft, JointType.ElbowLeft);
-            this.DrawBone(skeleton, drawingContext, JointType.ElbowLeft, JointType.WristLeft);
-            this.DrawBone(skeleton, drawingContext, JointType.WristLeft, JointType.HandLeft);
+            this.DrawBone(skeleton, drawingContext, JointType.ShoulderLeft, JointType.ElbowLeft, trackedBonePen);
+            this.DrawBone(skeleton, drawingContext, JointType.ElbowLeft, JointType.WristLeft, trackedBonePen);
+            this.DrawBone(skeleton, drawingContext, JointType.WristLeft, JointType.HandLeft, trackedBonePen);
 
             // Right Arm
-            this.DrawBone(skeleton, drawingContext, JointType.ShoulderRight, JointType.ElbowRight);
-            this.DrawBone(skeleton, drawingContext, JointType.ElbowRight, JointType.WristRight);
-            this.DrawBone(skeleton, drawingContext, JointType.WristRight, JointType.HandRight);
-
+            this.DrawBone(skeleton, drawingContext, JointType.ShoulderRight, JointType.ElbowRight, trackedBonePen);
+            this.DrawBone(skeleton, drawingContext, JointType.ElbowRight, JointType.WristRight, trackedBonePen);
+            this.DrawBone(skeleton, drawingContext, JointType.WristRight, JointType.HandRight, trackedBonePen);
+            
             // Left Leg
-            this.DrawBone(skeleton, drawingContext, JointType.HipLeft, JointType.KneeLeft);
-            this.DrawBone(skeleton, drawingContext, JointType.KneeLeft, JointType.AnkleLeft);
-            this.DrawBone(skeleton, drawingContext, JointType.AnkleLeft, JointType.FootLeft);
+            this.DrawBone(skeleton, drawingContext, JointType.HipLeft, JointType.KneeLeft, trackedBonePen);
+            //Antes de dibujar la conexion rodilla tobillo y tobillo pie
+            //se comprueba su poscion para definir el color con el que se dibujara
+            Joint posicionRodilla = skeleton.Joints[JointType.KneeLeft];
+            Joint posicionTobillo = skeleton.Joints[JointType.AnkleLeft];
+
+            float difEjeY = posicionRodilla.Position.Y - posicionTobillo.Position.Y;
+
+            //Posicion correcta
+            if (difEjeY < (float)0.25 && difEjeY > (float)-0.25 && posicionTobillo.Position.Z > posicionRodilla.Position.Z)
+            {
+                this.DrawBone(skeleton, drawingContext, JointType.KneeLeft, JointType.AnkleLeft, trackedBonePen);
+                this.DrawBone(skeleton, drawingContext, JointType.AnkleLeft, JointType.FootLeft, trackedBonePen);
+            }
+            else
+            {
+                //Falta un poco para llegar a la posicion correcta
+                if (difEjeY < (float)0.3 && difEjeY > (float)-0.3 && posicionTobillo.Position.Z > posicionRodilla.Position.Z)
+                {
+                    //Si la diferencia es positiva falta un poco para llegar
+                    if (difEjeY > 0)
+                    {
+                        this.DrawBone(skeleton, drawingContext, JointType.KneeLeft, JointType.AnkleLeft, trackedBonePenTurquoise);
+                        this.DrawBone(skeleton, drawingContext, JointType.AnkleLeft, JointType.FootLeft, trackedBonePenTurquoise);
+                    }
+                    //Si es negativa pasado de la posicion correcta
+                    else
+                    {
+                        this.DrawBone(skeleton, drawingContext, JointType.KneeLeft, JointType.AnkleLeft, trackedBoneYellow);
+                        this.DrawBone(skeleton, drawingContext, JointType.AnkleLeft, JointType.FootLeft, trackedBoneYellow);
+                    }
+                }
+                else //Posicion incorrecta
+                {
+                    this.DrawBone(skeleton, drawingContext, JointType.KneeLeft, JointType.AnkleLeft, trackedBoneRed);
+                    this.DrawBone(skeleton, drawingContext, JointType.AnkleLeft, JointType.FootLeft, trackedBoneRed);
+                }
+            }
+
 
             // Right Leg
-            this.DrawBone(skeleton, drawingContext, JointType.HipRight, JointType.KneeRight);
-            this.DrawBone(skeleton, drawingContext, JointType.KneeRight, JointType.AnkleRight);
-            this.DrawBone(skeleton, drawingContext, JointType.AnkleRight, JointType.FootRight);
+            this.DrawBone(skeleton, drawingContext, JointType.HipRight, JointType.KneeRight, trackedBonePen);
+            this.DrawBone(skeleton, drawingContext, JointType.KneeRight, JointType.AnkleRight, trackedBonePen);
+            this.DrawBone(skeleton, drawingContext, JointType.AnkleRight, JointType.FootRight, trackedBonePen);
  
             // Render Joints
             foreach (Joint joint in skeleton.Joints)
@@ -323,7 +362,7 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
         /// <param name="drawingContext">drawing context to draw to</param>
         /// <param name="jointType0">joint to start drawing from</param>
         /// <param name="jointType1">joint to end drawing at</param>
-        private void DrawBone(Skeleton skeleton, DrawingContext drawingContext, JointType jointType0, JointType jointType1)
+        private void DrawBone(Skeleton skeleton, DrawingContext drawingContext, JointType jointType0, JointType jointType1, Pen color)
         {
             Joint joint0 = skeleton.Joints[jointType0];
             Joint joint1 = skeleton.Joints[jointType1];
@@ -346,7 +385,7 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
             Pen drawPen = this.inferredBonePen;
             if (joint0.TrackingState == JointTrackingState.Tracked && joint1.TrackingState == JointTrackingState.Tracked)
             {
-                drawPen = this.trackedBonePen;
+                drawPen = color;
             }
 
             drawingContext.DrawLine(drawPen, this.SkeletonPointToScreen(joint0.Position), this.SkeletonPointToScreen(joint1.Position));
